@@ -1264,3 +1264,8 @@ footer small {
 .btn:hover::after{left:140%}
 .card:hover,.std:hover{border-color:rgba(209,16,31,.55);box-shadow:0 30px 60px -25px rgba(209,16,31,.45)}
 @media(max-width:900px){.hud{display:none}}
+/* ===== ADD-ON 3: view buttons ===== */
+.views{position:absolute;left:5vw;top:100px;display:flex;gap:4px;padding:6px}
+.views button{font-size:.58rem;letter-spacing:.18em;padding:9px 12px;border-radius:8px;border:1px solid transparent;transition:.3s}
+.views button:hover{border-color:var(--red);background:rgba(209,16,31,.18)}
+@media(max-width:900px){.views{top:80px;left:4vw;padding:3px}.views button{padding:8px;font-size:.5rem;letter-spacing:.06em}}
