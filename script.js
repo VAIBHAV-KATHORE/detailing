@@ -232,6 +232,7 @@ const TESTI = [
       b.classList.toggle("on", b.dataset.f === cfg.finish),
     );
     $("#cur").textContent = n + " · " + cfg.finish;
+      if (paint) gsap.fromTo(I, { z: .93 }, { z: 1, duration: 1.4, ease: 'power3.out', overwrite: 'auto' });
     if (paint) {
       const c = new THREE.Color(h);
       gsap.to(paint.color, {
@@ -509,6 +510,26 @@ const TESTI = [
   const pts = []; for (let i = 0; i <= 128; i++) pts.push(new THREE.Vector3(Math.cos(i / 128 * 6.2832) * 4.5, .02, Math.sin(i / 128 * 6.2832) * 4.5));
   const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xff3040, dashSize: .25, gapSize: .2, transparent: true, opacity: .6 })); dash.computeLineDistances(); S.add(dash);
   upd.push((t, dt) => dash.rotation.y += dt * .15);
+      /* ===== ADD-ON 3: WOW pack ===== */
+  const txt = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return new THREE.CanvasTexture(c); };
+  // number plates
+  const plateT = txt(256, 64, (g, w, h) => { g.fillStyle = '#0a0a0a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d1101f'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4); g.fillStyle = '#fff'; g.font = '700 30px Syncopate,Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('DEVILS', w / 2, h / 2 + 2); });
+  [[2.36, Math.PI / 2], [-2.36, -Math.PI / 2]].forEach(([x, ry]) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(.62, .155), new THREE.MeshBasicMaterial({ map: plateT })); p.position.set(x, .5, 0); p.rotation.y = ry; car.add(p); });
+  // brand text on floor
+  const bt = txt(1024, 128, (g, w, h) => { g.font = '700 64px Syncopate,Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText('D E T A I L I N G   D E V I L S', w / 2, h / 2); });
+  const brand = new THREE.Mesh(new THREE.PlaneGeometry(6, .75), new THREE.MeshBasicMaterial({ map: bt, transparent: true, opacity: .28, depthWrite: false })); brand.rotation.x = -Math.PI / 2; brand.position.set(0, .015, 5.4); S.add(brand);
+  // paint-reactive floor glow
+  const W = new THREE.Color(1, 1, 1), RD = new THREE.Color(1, .1, .15);
+  const pool = new THREE.Mesh(new THREE.CircleGeometry(6, 64), new THREE.MeshBasicMaterial({ map: gt, transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xff1a2b })); pool.rotation.x = -Math.PI / 2; pool.position.y = .02; S.add(pool);
+  upd.push(() => { pool.material.color.copy(paint.color).lerp(W, .35); ring.material.color.copy(paint.color).lerp(RD, .5); });
+  // overhead spotlight + visible light cone
+  const sp = new THREE.SpotLight(0xffffff, 2.2, 20, .45, 1); sp.position.set(0, 9, 1); S.add(sp, sp.target);
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(3.4, 9, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .045, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); cone.position.set(0, 4.5, 1); S.add(cone);
+  // halo arcs
+  const halos = [4.6, 5.4].map((r, i) => { const h = new THREE.Mesh(new THREE.TorusGeometry(r, .018, 8, 128, Math.PI * 1.3), new THREE.MeshBasicMaterial({ color: i ? 0xffffff : 0xff1a2b })); h.rotation.x = Math.PI / 2; h.position.y = 3.2 + i * .5; S.add(h); return h; });
+  upd.push((t, dt) => halos.forEach((h, i) => { h.rotation.z += dt * (i ? -.25 : .35); h.position.y = 3.2 + i * .5 + Math.sin(t * .001 + i) * .1; }));
+  // light towers
+  for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832 + .3, b = new THREE.Mesh(new THREE.BoxGeometry(.08, 6, .08), new THREE.MeshBasicMaterial({ color: i % 2 ? 0xffffff : 0xff1a2b })); b.position.set(Math.cos(a) * 10, 3, Math.sin(a) * 10); S.add(b); }
   // mirror-floor reflection (desktop only)
   if (!mob) { fl.material.transparent = true; fl.material.opacity = .78; fl.material.depthWrite = false; const mr = new THREE.Group(); mr.scale.y = -1; mr.add(car.clone()); rot.add(mr); }
 
@@ -660,7 +681,7 @@ const TESTI = [
     [6.9, 7, 1.5],
     [8.4, 7.4, 2.6],
   ].forEach(([az, d, y], i) => tl.to(cam, { az, d, y, duration: 1 }, i));
-  tl.to(".hero,.drag", { autoAlpha: 0, y: -40, duration: 0.5 }, 0.15);
+  tl.to('.hero,.drag,.views', { autoAlpha: 0, y: -40, duration: .5 }, .15);
   tl.to("#cfg", { autoAlpha: 0, x: 40, duration: 0.4 }, 0.6)
     .to("#cfg", { autoAlpha: 1, x: 0, duration: 0.4 }, 3.75)
     .to("#cfg", { autoAlpha: 0, x: 40, duration: 0.4 }, 4.9);
@@ -946,6 +967,12 @@ if (matchMedia('(pointer:fine)').matches) {
 $$('.hud b').forEach((b, i) => { const o = { v: 0 }; gsap.to(o, { v: +b.dataset.v, duration: 2.5, delay: 3.2 + i * .3, ease: 'power2.out', onUpdate: () => b.textContent = Math.round(o.v) }); });
 $('.mq div').innerHTML = ['PPF', 'VEHICLE WRAPPING', 'CERAMIC COATING', 'GRAPHENE', 'PAINT CORRECTION', 'WINDOW TINTING', 'ALLOY WHEELS', 'CAR SPA'].map(s => `<span>${s}</span>`).join('').repeat(2);
 
+  /* ===== ADD-ON 3: view angle buttons ===== */
+$$('.views button').forEach(b => b.onclick = () => {
+  const t = cam.az + (+b.dataset.a) * Math.PI / 2, n = Math.round((rotY - t) / (2 * Math.PI)), o = { v: rotY };
+  auto = false; vel = 0; $('#bRot').classList.remove('on');
+  gsap.to(o, { v: t + n * 2 * Math.PI, duration: 1.8, ease: 'power3.inOut', onUpdate: () => { rotY = o.v; vel = 0; } });
+});
   /* ---------- preloader -> reveal ---------- */
   function enter() {
     document.body.classList.remove("lock");
