@@ -1,0 +1,941 @@
+/* ==================== CONFIG — edit content here ==================== */
+const WA_NUMBER = "919999999999"; // <-- REPLACE with client WhatsApp number (country code + number, no + or spaces)
+const COLORS = [
+  ["OBSIDIAN BLACK", "#0d0d0f"],
+  ["DEVILS RED", "#b1000e"],
+  ["PEARL WHITE", "#ececf0"],
+  ["GRAPHITE GREY", "#3b3e44"],
+  ["ELECTRIC BLUE", "#0b47ff"],
+  ["MIDNIGHT PURPLE", "#2b0c66"],
+];
+const FINISHES = {
+  GLOSS: {
+    roughness: 0.06,
+    metalness: 0.25,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+  },
+  SATIN: {
+    roughness: 0.35,
+    metalness: 0.3,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.3,
+  },
+  MATTE: {
+    roughness: 0.85,
+    metalness: 0.05,
+    clearcoat: 0,
+    clearcoatRoughness: 0.6,
+  },
+  METALLIC: {
+    roughness: 0.22,
+    metalness: 0.95,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.08,
+  },
+};
+// [card title, description, icon glyph, value in booking form dropdown]
+const SERVICES = [
+  [
+    "PPF",
+    "Self-healing paint protection film against chips, UV and scratches.",
+    "◈",
+    "PPF",
+  ],
+  [
+    "WRAPPING",
+    "Colour-change wraps in gloss, satin, matte and metallic finishes.",
+    "❖",
+    "Vehicle Wrapping",
+  ],
+  [
+    "CERAMIC COATING",
+    "Hydrophobic nano-coating for depth, gloss and easy maintenance.",
+    "◇",
+    "Ceramic Coating",
+  ],
+  [
+    "DETAILING",
+    "Meticulous full-vehicle detailing, inside and out.",
+    "✦",
+    "Detailing",
+  ],
+  [
+    "PAINT CORRECTION",
+    "Multi-stage polishing removes swirls, haze and oxidation.",
+    "◎",
+    "Paint Correction",
+  ],
+  [
+    "INTERIOR DETAILING",
+    "Deep clean, leather care and odour removal.",
+    "▣",
+    "Interior",
+  ],
+  [
+    "EXTERIOR DETAILING",
+    "Decontamination, clay, polish and sealant finish.",
+    "◆",
+    "Exterior",
+  ],
+];
+const STATS = [
+  [10, "+", "YEARS EXPERIENCE"],
+  [5, "K+", "VEHICLES TRANSFORMED"],
+  [20, "K+", "SERVICES COMPLETED"],
+  [100, "%", "PASSION FOR CARS"],
+];
+const STANDARD = [
+  ["PRECISION", "Every panel measured, every edge finished.", "◎"],
+  ["PREMIUM MATERIALS", "Only certified films, coatings and compounds.", "◈"],
+  ["EXPERT TECHNICIANS", "Trained hands with years behind the buffer.", "✦"],
+  [
+    "ADVANCED TECHNOLOGY",
+    "Paint-depth gauges, inspection lighting, curing lamps.",
+    "❖",
+  ],
+  ["QUALITY CONTROL", "A final inspection before every handover.", "▣"],
+];
+const STEPS = [
+  ["CONSULTATION", "We listen to what you want for your car."],
+  ["INSPECTION", "Paint depth and condition checked under studio light."],
+  ["PREPARATION", "Wash, decontaminate and correct the surface."],
+  ["APPLICATION", "Film, wrap or coating applied in a controlled bay."],
+  ["QUALITY CHECK", "Every panel inspected against our checklist."],
+  ["FINAL REVEAL", "You collect a car that looks better than new."],
+];
+const GALLERY = [
+  ["PPF", "Full-front PPF"],
+  ["WRAPPING", "Satin midnight wrap"],
+  ["CERAMIC", "9H ceramic finish"],
+  ["DETAILING", "Showroom detail"],
+  ["INTERIOR", "Leather restoration"],
+  ["EXTERIOR", "Exterior decontamination"],
+  ["PPF", "Track-day PPF"],
+  ["WRAPPING", "Colour-shift wrap"],
+  ["CERAMIC", "Graphene layer"],
+  ["DETAILING", "Paint correction"],
+  ["INTERIOR", "Cabin deep clean"],
+  ["EXTERIOR", "Alloy refinish"],
+];
+const TESTI = [
+  [
+    "Absolutely incredible transformation. The car looks better than new.",
+    "Premium Vehicle Owner",
+  ],
+  ["The PPF is invisible and the gloss is unreal.", "Sports Car Owner"],
+  ["They treated my car like their own. Flawless work.", "Luxury SUV Owner"],
+  ["My wrap looks factory-painted. Worth every rupee.", "Wrap Customer"],
+  [
+    "Ceramic coating water beads like nothing I have seen.",
+    "Detailing Customer",
+  ],
+];
+/* ==================================================================== */
+
+(() => {
+  const $ = (s, c = document) => c.querySelector(s),
+    $$ = (s, c = document) => [...c.querySelectorAll(s)];
+  if (!window.gsap || !window.ScrollTrigger) {
+    document.body.classList.remove("lock");
+    const p = $("#pre");
+    if (p) p.remove();
+    document.body.classList.add("nogl");
+    return;
+  }
+  gsap.registerPlugin(ScrollTrigger);
+
+  const mob = innerWidth < 768;
+  const low =
+    (navigator.hardwareConcurrency || 4) <= 2 ||
+    (navigator.deviceMemory || 4) <= 2;
+  const hasGL = () => {
+    try {
+      const c = document.createElement("canvas");
+      return !!(
+        window.THREE &&
+        (c.getContext("webgl2") || c.getContext("webgl"))
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+  const use3d = hasGL() && !(low && mob);
+  const cfg = { color: 1, finish: "GLOSS" };
+  let paint = null,
+    auto = true,
+    lights = false,
+    zoom = 1,
+    run = true,
+    rotY = 0,
+    vel = 0;
+  const cam = { az: 0.6, d: 8, y: 1.7 },
+    fx = { ppf: 0, drop: 0 },
+    I = { z: 1 };
+
+  /* ---------- generated content ---------- */
+  $$(".sws").forEach((w) =>
+    COLORS.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "sw";
+      b.dataset.i = i;
+      b.title = c[0];
+      b.setAttribute("aria-label", c[0]);
+      b.style.setProperty("--c", c[1]);
+      w.appendChild(b);
+    }),
+  );
+  $("#cards").innerHTML = SERVICES.map(
+    ([n, d, g, v], i) =>
+      `<article class="card tilt"><div class="img" style="--h:${i * 40}"><span class="ic">${g}</span><svg viewBox="0 0 400 150" role="img" aria-label="${n}"><use href="#car"/></svg></div><h3>${n}</h3><p>${d}</p><a href="#book" class="btn sm" data-s="${v}">EXPLORE</a></article>`,
+  ).join("");
+  $("#std").innerHTML = STANDARD.map(
+    ([n, d, g]) =>
+      `<div class="std tilt"><span class="ic">${g}</span><h3>${n}</h3><p>${d}</p></div>`,
+  ).join("");
+  $("#stats").innerHTML = STATS.map(
+    ([n, s, l]) =>
+      `<div class="stat tilt"><span class="num" data-n="${n}" data-s="${s}">0</span><em>${l}</em></div>`,
+  ).join("");
+  $("#tl").insertAdjacentHTML(
+    "beforeend",
+    STEPS.map(
+      ([n, d], i) =>
+        `<div class="step"><i>0${i + 1}</i><h3>${n}</h3><p>${d}</p></div>`,
+    ).join(""),
+  );
+  $("#grid").innerHTML = GALLERY.map(
+    ([c, t], i) =>
+      `<figure class="tile" data-cat="${c}" data-cur="VIEW" style="--paint:hsl(${i * 31} 70% 38%)"><svg viewBox="0 0 400 150" role="img" aria-label="${t}"><use href="#car"/></svg><figcaption>${t}</figcaption></figure>`,
+  ).join("");
+  $("#tt").innerHTML = TESTI.map(
+    ([q, c]) =>
+      `<div class="t"><span class="s">★★★★★</span><q>${q}</q><cite>— ${c}</cite></div>`,
+  ).join("");
+  const wa =
+    "https://wa.me/" +
+    WA_NUMBER +
+    "?text=" +
+    encodeURIComponent("Hi Detailing Devils, I would like to book a service.");
+  $$(".wal").forEach((a) => (a.href = wa));
+
+  /* ---------- colour / finish ---------- */
+  function setLook(ci, fin) {
+    if (ci != null) cfg.color = ci;
+    if (fin) cfg.finish = fin;
+    const [n, h] = COLORS[cfg.color];
+    document.documentElement.style.setProperty("--paint", h);
+    $$(".sw").forEach((b) =>
+      b.classList.toggle("on", +b.dataset.i === cfg.color),
+    );
+    $$(".fn").forEach((b) =>
+      b.classList.toggle("on", b.dataset.f === cfg.finish),
+    );
+    $("#cur").textContent = n + " · " + cfg.finish;
+    if (paint) {
+      const c = new THREE.Color(h);
+      gsap.to(paint.color, {
+        r: c.r,
+        g: c.g,
+        b: c.b,
+        duration: 0.9,
+        ease: "power2.inOut",
+      });
+      gsap.to(paint, { ...FINISHES[cfg.finish], duration: 0.9 });
+    }
+  }
+  document.addEventListener("click", (e) => {
+    const s = e.target.closest(".sw");
+    if (s) setLook(+s.dataset.i);
+    const f = e.target.closest(".fn");
+    if (f) setLook(null, f.dataset.f);
+    const d = e.target.closest("[data-s]");
+    if (d) $("#svc").value = d.dataset.s;
+  });
+  $("#bRot").onclick = (e) => {
+    auto = !auto;
+    e.currentTarget.classList.toggle("on", auto);
+  };
+  $("#zoom").oninput = (e) => (zoom = +e.target.value);
+  $("#bCol").onclick = () => setLook((cfg.color + 1) % COLORS.length);
+  $("#bLit").onclick = (e) => {
+    lights = !lights;
+    e.currentTarget.classList.toggle("on", lights);
+  };
+
+  /* ---------- THREE.js showroom ---------- */
+  function init3d() {
+    const cv = $("#gl"),
+      R = new THREE.WebGLRenderer({
+        canvas: cv,
+        antialias: !mob,
+        powerPreference: "high-performance",
+      });
+    R.setPixelRatio(Math.min(devicePixelRatio, mob ? 1.25 : 2));
+    R.outputEncoding = THREE.sRGBEncoding;
+    R.toneMapping = THREE.ACESFilmicToneMapping;
+    R.toneMappingExposure = 1.05;
+    const S = new THREE.Scene();
+    S.background = new THREE.Color(0x050505);
+    S.fog = new THREE.FogExp2(0x050505, 0.045);
+    const C = new THREE.PerspectiveCamera(38, 1, 0.1, 60);
+    // studio reflections (procedural environment)
+    const E = new THREE.Scene();
+    E.add(
+      new THREE.Mesh(
+        new THREE.BoxGeometry(30, 14, 30),
+        new THREE.MeshBasicMaterial({ color: 0x080808, side: THREE.BackSide }),
+      ),
+    );
+    [
+      [0, 6, 0, 10, 0.2, 3, 1],
+      [-10, 3, 0, 0.2, 4, 10, 0],
+      [10, 3, 0, 0.2, 4, 10, 1],
+      [0, 3, -10, 10, 3, 0.2, 0],
+    ].forEach(([x, y, z, w, h, d, wh]) => {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshBasicMaterial({
+          color: wh
+            ? new THREE.Color(1, 1, 1).multiplyScalar(5)
+            : new THREE.Color(1, 0.05, 0.08).multiplyScalar(4),
+        }),
+      );
+      m.position.set(x, y, z);
+      E.add(m);
+    });
+    S.environment = new THREE.PMREMGenerator(R).fromScene(E, 0.02).texture;
+    const key = new THREE.DirectionalLight(0xffffff, 0.8);
+    key.position.set(3, 6, 4);
+    S.add(key);
+    const r1 = new THREE.PointLight(0xff1a2b, 2, 14);
+    r1.position.set(-4, 2.5, 3);
+    const r2 = r1.clone();
+    r2.position.set(4, 2.5, -3);
+    S.add(r1, r2);
+    const ug = new THREE.PointLight(0xff1a2b, 0, 6);
+    ug.position.set(0, 0.2, 0);
+    S.add(ug);
+    const fl = new THREE.Mesh(
+      new THREE.CircleGeometry(14, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x070707,
+        roughness: 0.18,
+        metalness: 0.85,
+      }),
+    );
+    fl.rotation.x = -Math.PI / 2;
+    S.add(fl);
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(3.3, 3.36, 96),
+      new THREE.MeshBasicMaterial({
+        color: 0xff1a2b,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide,
+      }),
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.01;
+    S.add(ring);
+    const glow = new THREE.Mesh(
+      new THREE.RingGeometry(3.2, 4, 96),
+      new THREE.MeshBasicMaterial({
+        color: 0xff1a2b,
+        transparent: true,
+        opacity: 0.07,
+        side: THREE.DoubleSide,
+      }),
+    );
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.y = 0.01;
+    S.add(glow);
+
+    /* ===== MODEL: procedural car. To use a real GLB, load it with GLTFLoader, add it to `car`
+     (remove the meshes below) and assign `paint` to the body material — see README notes. ===== */
+    const rot = new THREE.Group(),
+      car = new THREE.Group();
+    car.rotation.y = -Math.PI / 2;
+    rot.add(car);
+    S.add(rot);
+    const seg = mob ? 3 : 6;
+    const ex = (pts, w, b) => {
+      const s = new THREE.Shape();
+      pts.forEach((p, i) => (i ? s.lineTo(p[0], p[1]) : s.moveTo(p[0], p[1])));
+      const g = new THREE.ExtrudeGeometry(s, {
+        depth: w,
+        bevelEnabled: true,
+        bevelSize: b,
+        bevelThickness: b,
+        bevelSegments: seg,
+        curveSegments: 8,
+      });
+      g.translate(0, 0, -w / 2);
+      return g;
+    };
+    paint = new THREE.MeshPhysicalMaterial({
+      color: COLORS[1][1],
+      ...FINISHES.GLOSS,
+      envMapIntensity: 1.4,
+    });
+    const bodyG = ex(
+      [
+        [-2.15, 0.3],
+        [-2.2, 0.55],
+        [-2.05, 0.9],
+        [-1.2, 0.98],
+        [0.6, 0.98],
+        [1.5, 0.92],
+        [2.05, 0.78],
+        [2.2, 0.55],
+        [2.15, 0.3],
+      ],
+      1.7,
+      0.14,
+    );
+    const glass = new THREE.Mesh(
+      ex(
+        [
+          [-1.25, 0.98],
+          [-0.65, 1.34],
+          [0.15, 1.4],
+          [0.9, 0.98],
+        ],
+        1.35,
+        0.05,
+      ),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x05070a,
+        roughness: 0.05,
+        metalness: 0.9,
+        clearcoat: 1,
+      }),
+    );
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 1.3), paint);
+    roof.position.set(-0.25, 1.395, 0);
+    roof.rotation.z = 0.075;
+    car.add(new THREE.Mesh(bodyG, paint), glass, roof);
+    const tire = new THREE.MeshStandardMaterial({
+        color: 0x0a0a0a,
+        roughness: 0.7,
+      }),
+      rim = new THREE.MeshStandardMaterial({
+        color: 0xc8ccd2,
+        metalness: 1,
+        roughness: 0.2,
+      });
+    [
+      [1.4, 1],
+      [1.4, -1],
+      [-1.4, 1],
+      [-1.4, -1],
+    ].forEach(([x, z]) => {
+      const w = new THREE.Group();
+      w.add(
+        new THREE.Mesh(
+          new THREE.CylinderGeometry(0.44, 0.44, 0.32, mob ? 20 : 36),
+          tire,
+        ),
+        new THREE.Mesh(
+          new THREE.CylinderGeometry(0.3, 0.3, 0.34, mob ? 8 : 16),
+          rim,
+        ),
+      );
+      w.rotation.x = Math.PI / 2;
+      w.position.set(x, 0.44, z * 0.92);
+      car.add(w);
+    });
+    const hl = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.4,
+      }),
+      tl = new THREE.MeshStandardMaterial({
+        color: 0x330000,
+        emissive: 0xff0010,
+        emissiveIntensity: 1.2,
+      });
+    [0.62, -0.62].forEach((z) => {
+      const a = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, 0.4), hl);
+      a.position.set(2.32, 0.7, z);
+      car.add(a);
+    });
+    const tb = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, 1.5), tl);
+    tb.position.set(-2.33, 0.75, 0);
+    car.add(tb);
+
+    // PPF shield
+    const sm = new THREE.MeshBasicMaterial({
+        color: 0xff2a3a,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+      lm = new THREE.LineBasicMaterial({
+        color: 0xff6a75,
+        transparent: true,
+        opacity: 0,
+      });
+    [bodyG, glass.geometry].forEach((g) => {
+      const m = new THREE.Mesh(g, sm),
+        l = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), lm);
+      m.scale.setScalar(1.03);
+      l.scale.setScalar(1.03);
+      car.add(m, l);
+    });
+    // ceramic droplets
+    const N = mob ? 70 : 220,
+      pp = new Float32Array(N * 3),
+      dm = new THREE.PointsMaterial({
+        color: 0xaee3ff,
+        size: 0.045,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+      dg = new THREE.BufferGeometry();
+    const reset = (i, top) => {
+      pp[i * 3] = (Math.random() - 0.5) * 4;
+      pp[i * 3 + 1] = top ? 1.45 : 0.5 + Math.random() * 0.95;
+      pp[i * 3 + 2] = (i % 2 ? 1 : -1) * 1.06;
+    };
+    for (let i = 0; i < N; i++) reset(i);
+    dg.setAttribute("position", new THREE.BufferAttribute(pp, 3));
+    const dr = new THREE.Points(dg, dm);
+    dr.frustumCulled = false;
+    car.add(dr);
+
+    // interaction
+    let dn = false,
+      lx = 0,
+      mx = 0,
+      my = 0;
+    cv.addEventListener("pointerdown", (e) => {
+      dn = true;
+      lx = e.clientX;
+      try {
+        cv.setPointerCapture(e.pointerId);
+      } catch (x) {}
+    });
+    addEventListener("pointerup", () => (dn = false));
+    addEventListener("pointermove", (e) => {
+      mx = e.clientX / innerWidth - 0.5;
+      my = e.clientY / innerHeight - 0.5;
+      if (dn) {
+        vel = (e.clientX - lx) * 0.006;
+        lx = e.clientX;
+        rotY += vel;
+      }
+    });
+    const size = () => {
+      const w = innerWidth,
+        h = innerHeight;
+      R.setSize(w, h, false);
+      C.aspect = w / h;
+      C.setViewOffset(w, h, w > 900 ? -w * 0.14 : 0, 0, w, h);
+      C.updateProjectionMatrix();
+    };
+    addEventListener("resize", size);
+    size();
+
+    let last = 0;
+    (function tick(t) {
+      requestAnimationFrame(tick);
+      if (!run || document.hidden) {
+        last = t;
+        return;
+      }
+      const dt = Math.min((t - last) / 1000, 0.05);
+      last = t;
+      if (!dn) {
+        vel *= 0.94;
+        rotY += vel;
+        if (auto) rotY += dt * 0.18;
+      }
+      rot.rotation.y = rotY;
+      const d = cam.d * zoom * I.z * (C.aspect < 1 ? 1.55 : 1);
+      C.position.set(
+        Math.sin(cam.az) * d + mx * 0.6,
+        cam.y - my * 0.4,
+        Math.cos(cam.az) * d,
+      );
+      C.lookAt(0, 0.55, 0);
+      sm.opacity = fx.ppf * 0.14;
+      lm.opacity = fx.ppf * 0.9;
+      dm.opacity = fx.drop * 0.9;
+      if (fx.drop > 0.01) {
+        for (let i = 0; i < N; i++) {
+          pp[i * 3 + 1] -= dt * (0.15 + (i % 5) * 0.05);
+          pp[i * 3] += Math.sin(t * 0.001 + i) * 0.0006;
+          if (pp[i * 3 + 1] < 0.42) reset(i, true);
+        }
+        dg.attributes.position.needsUpdate = true;
+      }
+      hl.emissiveIntensity +=
+        ((lights ? 4 : 0.4) - hl.emissiveIntensity) * 0.08;
+      ug.intensity += ((lights ? 4 : 0) - ug.intensity) * 0.08;
+      r1.intensity = 2 + Math.sin(t * 0.002) * (lights ? 1.5 : 0.2);
+      ring.material.opacity = 0.55 + Math.sin(t * 0.0015) * 0.15;
+      R.render(S, C);
+    })(0);
+  }
+  if (use3d) {
+    try {
+      init3d();
+    } catch (e) {
+      console.warn("3D disabled:", e);
+      document.body.classList.add("nogl");
+    }
+  } else document.body.classList.add("nogl");
+  setLook(1, "GLOSS");
+
+  /* ---------- scroll storytelling ---------- */
+  if (innerWidth < 900) gsap.set("#cfg", { autoAlpha: 0 });
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: "#scene",
+      start: "top top",
+      end: "bottom bottom",
+      scrub: 1.2,
+      onToggle: (s) => (run = s.isActive),
+    },
+    defaults: { ease: "power1.inOut" },
+  });
+  [
+    [0.15, 6.6, 1.3],
+    [1.57, 6.4, 1.2],
+    [2.3, 6, 2],
+    [4.71, 4.4, 1],
+    [6.9, 7, 1.5],
+    [8.4, 7.4, 2.6],
+  ].forEach(([az, d, y], i) => tl.to(cam, { az, d, y, duration: 1 }, i));
+  tl.to(".hero,.drag", { autoAlpha: 0, y: -40, duration: 0.5 }, 0.15);
+  tl.to("#cfg", { autoAlpha: 0, x: 40, duration: 0.4 }, 0.6)
+    .to("#cfg", { autoAlpha: 1, x: 0, duration: 0.4 }, 3.75)
+    .to("#cfg", { autoAlpha: 0, x: 40, duration: 0.4 }, 4.9);
+  $$(".st").forEach((el, i) => {
+    tl.fromTo(
+      el,
+      { autoAlpha: 0, y: 50 },
+      { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" },
+      1.1 + i,
+    ).to(
+      el,
+      { autoAlpha: 0, y: -50, duration: 0.3, ease: "power2.in" },
+      1.68 + i,
+    );
+    $$(".fl", el).forEach((f, j) =>
+      tl.fromTo(
+        f,
+        { autoAlpha: 0, scale: 0.9 },
+        { autoAlpha: 1, scale: 1, duration: 0.15 },
+        1.25 + i + j * 0.08,
+      ),
+    );
+  });
+  tl.to(fx, { ppf: 1, duration: 0.4 }, 2.05)
+    .to(fx, { ppf: 0, duration: 0.4 }, 2.85)
+    .to(fx, { drop: 1, duration: 0.4 }, 3.05)
+    .to(fx, { drop: 0, duration: 0.4 }, 3.85);
+  tl.to(
+    "#veil",
+    { backgroundPosition: "100% 100%", duration: 7, ease: "none" },
+    0,
+  );
+
+  /* ---------- reveals, stats, timeline ---------- */
+  gsap.utils
+    .toArray(".rv")
+    .forEach((el) =>
+      gsap.from(el, {
+        y: 50,
+        autoAlpha: 0,
+        duration: 1.2,
+        ease: "power3.out",
+        scrollTrigger: { trigger: el, start: "top 88%" },
+      }),
+    );
+  ["#cards .card", "#std .std", "#stats .stat", ".tile"].forEach((s) =>
+    gsap.from(s, {
+      y: 60,
+      autoAlpha: 0,
+      duration: 1.1,
+      stagger: 0.09,
+      ease: "power3.out",
+      scrollTrigger: { trigger: s, start: "top 88%" },
+      clearProps: "transform",
+    }),
+  );
+  $$(".num").forEach((n) => {
+    const o = { v: 0 };
+    ScrollTrigger.create({
+      trigger: n,
+      start: "top 90%",
+      once: true,
+      onEnter: () =>
+        gsap.to(o, {
+          v: +n.dataset.n,
+          duration: 2.2,
+          ease: "power2.out",
+          onUpdate: () => (n.textContent = Math.round(o.v)),
+        }),
+    });
+  });
+  gsap.to("#pl", {
+    scaleY: 1,
+    ease: "none",
+    scrollTrigger: {
+      trigger: "#tl",
+      start: "top 60%",
+      end: "bottom 60%",
+      scrub: true,
+    },
+  });
+  $$(".step").forEach((s) =>
+    ScrollTrigger.create({
+      trigger: s,
+      start: "top 60%",
+      onEnter: () => s.classList.add("on"),
+      onLeaveBack: () => s.classList.remove("on"),
+    }),
+  );
+  const rg = $("#rg"),
+    cmp = $("#cmp"),
+    upd = () => {
+      cmp.style.setProperty("--p", rg.value + "%");
+      $("#done").classList.toggle("on", +rg.value < 8);
+    };
+  rg.addEventListener("input", upd);
+  ScrollTrigger.create({
+    trigger: cmp,
+    start: "top 75%",
+    once: true,
+    onEnter: () => {
+      const o = { v: 100 };
+      gsap.to(o, {
+        v: 50,
+        duration: 2,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          rg.value = o.v;
+          upd();
+        },
+      });
+    },
+  });
+
+  /* ---------- card tilt ---------- */
+  document.addEventListener("mousemove", (e) => {
+    const c = e.target.closest && e.target.closest(".tilt");
+    if (!c) return;
+    const r = c.getBoundingClientRect(),
+      x = (e.clientX - r.left) / r.width - 0.5,
+      y = (e.clientY - r.top) / r.height - 0.5;
+    c.style.setProperty("--mx", (x + 0.5) * 100 + "%");
+    c.style.setProperty("--my", (y + 0.5) * 100 + "%");
+    gsap.to(c, {
+      rotationY: x * 12,
+      rotationX: -y * 12,
+      duration: 0.4,
+      transformPerspective: 800,
+      ease: "power2.out",
+    });
+    gsap.to(c.firstElementChild, { x: -x * 14, y: -y * 14, duration: 0.4 });
+  });
+  document.addEventListener("mouseout", (e) => {
+    const c = e.target.closest && e.target.closest(".tilt");
+    if (c && !c.contains(e.relatedTarget)) {
+      gsap.to(c, {
+        rotationX: 0,
+        rotationY: 0,
+        duration: 0.8,
+        ease: "power3.out",
+      });
+      gsap.to(c.firstElementChild, { x: 0, y: 0, duration: 0.8 });
+    }
+  });
+
+  /* ---------- gallery + lightbox ---------- */
+  const tiles = $$(".tile"),
+    lb = $("#lb"),
+    lbc = $("#lbc");
+  let vis = tiles,
+    li = 0;
+  $$(".flt button").forEach(
+    (b) =>
+      (b.onclick = () => {
+        $$(".flt button").forEach((x) => x.classList.toggle("on", x === b));
+        tiles.forEach((t) =>
+          t.classList.toggle(
+            "h",
+            b.dataset.c !== "ALL" && t.dataset.cat !== b.dataset.c,
+          ),
+        );
+        vis = tiles.filter((t) => !t.classList.contains("h"));
+        gsap.fromTo(
+          vis,
+          { autoAlpha: 0, y: 30 },
+          { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.05 },
+        );
+      }),
+  );
+  const show = (i) => {
+    li = (i + vis.length) % vis.length;
+    const t = vis[li];
+    lbc.className = "lbc";
+    lbc.style.cssText = t.style.cssText;
+    lbc.innerHTML = t.innerHTML;
+    gsap.fromTo(
+      lbc,
+      { autoAlpha: 0, scale: 0.94 },
+      { autoAlpha: 1, scale: 1, duration: 0.6, ease: "power3.out" },
+    );
+  };
+  tiles.forEach(
+    (t) =>
+      (t.onclick = () => {
+        lb.classList.add("on");
+        show(vis.indexOf(t));
+      }),
+  );
+  $("#lp").onclick = () => show(li - 1);
+  $("#ln").onclick = () => show(li + 1);
+  $("#lz").onclick = () => lbc.classList.toggle("z");
+  $("#lx").onclick = () => lb.classList.remove("on");
+  addEventListener("keydown", (e) => {
+    if (!lb.classList.contains("on")) return;
+    if (e.key === "Escape") lb.classList.remove("on");
+    if (e.key === "ArrowLeft") show(li - 1);
+    if (e.key === "ArrowRight") show(li + 1);
+  });
+
+  /* ---------- testimonials ---------- */
+  const ts = $$(".t");
+  let ti = 2;
+  const place = () =>
+    ts.forEach((c, i) => {
+      const o = i - ti,
+        a = Math.abs(o);
+      c.style.transform = `translateX(calc(-50% + ${o * 62}%)) translateZ(${-a * 140}px) scale(${1 - a * 0.14})`;
+      c.style.opacity = a > 2 ? 0 : 1 - a * 0.38;
+      c.style.filter = a ? `blur(${a * 2.5}px)` : "none";
+      c.style.zIndex = 9 - a;
+      c.style.pointerEvents = a > 2 ? "none" : "auto";
+    });
+  ts.forEach(
+    (c, i) =>
+      (c.onclick = () => {
+        ti = i;
+        place();
+      }),
+  );
+  place();
+  setInterval(() => {
+    ti = (ti + 1) % ts.length;
+    place();
+  }, 5200);
+
+  /* ---------- form ---------- */
+  $("#form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    $("#ok").classList.add("on");
+    gsap.fromTo(
+      "#ok .box",
+      { y: 40, scale: 0.94, autoAlpha: 0 },
+      { y: 0, scale: 1, autoAlpha: 1, duration: 0.9, ease: "expo.out" },
+    );
+    e.target.reset();
+  });
+  $("#okc").onclick = () => $("#ok").classList.remove("on");
+
+  /* ---------- nav, progress, cursor ---------- */
+  const nav = $("#nav"),
+    bar = $("#bar");
+  addEventListener(
+    "scroll",
+    () => {
+      nav.classList.toggle("sc", scrollY > 40);
+      bar.style.transform =
+        "scaleX(" +
+        scrollY /
+          Math.max(1, document.documentElement.scrollHeight - innerHeight) +
+        ")";
+    },
+    { passive: true },
+  );
+  $("#burger").onclick = () => nav.classList.toggle("open");
+  $$("#menu a").forEach((a) =>
+    a.addEventListener("click", () => nav.classList.remove("open")),
+  );
+  if (matchMedia("(pointer:fine)").matches) {
+    document.body.classList.add("cur");
+    const cr = $(".cr"),
+      cd = $(".cd"),
+      qx = gsap.quickTo(cr, "x", { duration: 0.4, ease: "power3" }),
+      qy = gsap.quickTo(cr, "y", { duration: 0.4, ease: "power3" });
+    addEventListener("mousemove", (e) => {
+      qx(e.clientX);
+      qy(e.clientY);
+      gsap.set(cd, { x: e.clientX, y: e.clientY });
+    });
+    document.addEventListener("mouseover", (e) => {
+      const t = e.target,
+        c = t.closest && t.closest("[data-cur]"),
+        b = t.closest && t.closest("a,button,input,select,textarea,.sw");
+      cr.classList.toggle("big", !!b && !c);
+      cr.classList.toggle("txt", !!c);
+      cr.firstElementChild.textContent = c ? c.dataset.cur : "";
+    });
+  }
+
+  /* ---------- preloader -> reveal ---------- */
+  function enter() {
+    document.body.classList.remove("lock");
+    gsap.fromTo(I, { z: 1.7 }, { z: 1, duration: 2.8, ease: "expo.out" });
+    gsap.from(".hero h1 span", {
+      yPercent: 100,
+      autoAlpha: 0,
+      duration: 1.5,
+      ease: "expo.out",
+      stagger: 0.15,
+    });
+    gsap.from(".hero .kick,.hero .lead,.hero .cta,.ctl,#nav", {
+      autoAlpha: 0,
+      y: 30,
+      duration: 1.2,
+      stagger: 0.1,
+      delay: 0.5,
+      ease: "power3.out",
+    });
+    ScrollTrigger.refresh();
+  }
+  const arc = $("#arc"),
+    L = 2 * Math.PI * 45,
+    P = { v: 0 };
+  arc.style.strokeDasharray = L;
+  arc.style.strokeDashoffset = L;
+  gsap.to(P, {
+    v: 100,
+    duration: 2.8,
+    ease: "power1.inOut",
+    onUpdate() {
+      arc.style.strokeDashoffset = L * (1 - P.v / 100);
+      $("#pct").textContent = Math.round(P.v);
+    },
+    onComplete() {
+      gsap
+        .timeline()
+        .to(".pl", {
+          scale: 0.85,
+          autoAlpha: 0,
+          duration: 0.8,
+          ease: "power2.in",
+        })
+        .to("#pre", { yPercent: -100, duration: 1.1, ease: "expo.inOut" })
+        .add(enter, "-=.6")
+        .set("#pre", { display: "none" });
+    },
+  });
+})();
